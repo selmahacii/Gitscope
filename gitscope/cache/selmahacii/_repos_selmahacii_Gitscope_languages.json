@@ -1,0 +1,11 @@
+{
+  "_cached_at": 1773791349.8627868,
+  "_cached_at_iso": "2026-03-17T23:49:09.862789+00:00",
+  "data": {
+    "Python": 277924,
+    "TypeScript": 167836,
+    "CSS": 4168,
+    "Dockerfile": 2868,
+    "JavaScript": 1713
+  }
+}

@@ -27,6 +27,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from scipy.stats import entropy
+import re
 
 from loguru import logger
 
@@ -100,7 +101,14 @@ def analyze_languages(df: pd.DataFrame) -> Dict[str, Any]:
     # Shannon entropy formula: H = -Σ(p_i * log2(p_i))
     # BUSINESS LOGIC: Higher entropy = more diverse technology stack
     # Scale: 0-1 (single language), 1-2 (moderate), 2+ (highly diverse)
-    diversity = entropy(proportions, base=2)
+    try:
+        diversity = entropy(proportions, base=2)
+        if np.isnan(diversity) or np.isinf(diversity):
+            diversity = 0.0
+    except Exception as e:
+        logger.warning(f"Error calculating entropy: {e}")
+        diversity = 0.0
+        
     result["diversity_score"] = round(diversity, 3)
 
     # Classify diversity level
@@ -253,8 +261,10 @@ def analyze_repositories(df: pd.DataFrame) -> Dict[str, Any]:
 
     # Count active (non-archived) repos
     if "is_archived" in df.columns:
-        result["active_repos"] = len(df[~df["is_archived"]])
-        result["archived_repos"] = len(df[df["is_archived"]])
+        # SAFETY: Ensure column is actual boolean series for bitwise NOT
+        is_archived = df["is_archived"].fillna(False).astype(bool)
+        result["active_repos"] = len(df[~is_archived])
+        result["archived_repos"] = len(df[is_archived])
         result["archive_ratio"] = round(
             (result["archived_repos"] / result["total_repos"] * 100), 1
         ) if result["total_repos"] > 0 else 0
@@ -266,7 +276,9 @@ def analyze_repositories(df: pd.DataFrame) -> Dict[str, Any]:
     # Fork ratio
     # WHY: High fork ratio might indicate learning/tinkering vs creation
     if "is_fork" in df.columns:
-        fork_count = df["is_fork"].sum()
+        # SAFETY: Ensure column is actual boolean series
+        is_fork = df["is_fork"].fillna(False).astype(bool)
+        fork_count = is_fork.sum()
         result["fork_count"] = int(fork_count)
         result["fork_ratio"] = round((fork_count / len(df) * 100), 1) if len(df) > 0 else 0
     else:
@@ -280,25 +292,37 @@ def analyze_repositories(df: pd.DataFrame) -> Dict[str, Any]:
 
     if "stargazers_count" in df.columns:
         # Sort by stars and get top repos
-        top_repos = df.nlargest(5, "stargazers_count")
+        try:
+            top_repos = df.nlargest(5, "stargazers_count")
+            
+            if not top_repos.empty:
+                result["most_starred"] = {
+                    "name": top_repos.iloc[0]["name"] if "name" in top_repos.columns else None,
+                    "stars": int(top_repos.iloc[0]["stargazers_count"]),
+                    "description": top_repos.iloc[0].get("description"),
+                    "language": top_repos.iloc[0].get("primary_language"),
+                }
 
-        result["most_starred"] = {
-            "name": top_repos.iloc[0]["name"] if len(top_repos) > 0 else None,
-            "stars": int(top_repos.iloc[0]["stargazers_count"]) if len(top_repos) > 0 else 0,
-            "description": top_repos.iloc[0].get("description"),
-            "language": top_repos.iloc[0].get("primary_language"),
-        }
-
-        result["top_repositories"] = [
-            {
-                "name": row["name"],
-                "stars": int(row["stargazers_count"]),
-                "forks": int(row["forks_count"]) if "forks_count" in row else 0,
-                "language": row.get("primary_language"),
-                "description": row.get("description"),
-            }
-            for _, row in top_repos.iterrows()
-        ]
+                result["top_repositories"] = [
+                    {
+                        "name": row["name"],
+                        "stars": int(row["stargazers_count"]),
+                        "forks": int(row["forks_count"]) if "forks_count" in row else 0,
+                        "language": row.get("primary_language"),
+                        "description": row.get("description"),
+                    }
+                    for _, row in top_repos.iterrows()
+                ]
+            else:
+                result["most_starred"] = None
+                result["top_repositories"] = []
+        except Exception as e:
+            logger.warning(f"Error in top repositories analysis: {e}")
+            result["most_starred"] = None
+            result["top_repositories"] = []
+    else:
+        result["most_starred"] = None
+        result["top_repositories"] = []
 
     # =========================================================================
     # Topic analysis
@@ -364,7 +388,8 @@ def analyze_repositories(df: pd.DataFrame) -> Dict[str, Any]:
     if "primary_language" in df.columns:
         lang_counts = df["primary_language"].value_counts().to_dict()
         result["language_distribution"] = lang_counts
-        result["most_common_language"] = df["primary_language"].mode().iloc[0] if len(df) > 0 else None
+        mode_res = df["primary_language"].mode()
+        result["most_common_language"] = mode_res.iloc[0] if not mode_res.empty else None
 
     # =========================================================================
     # Repository size analysis
@@ -374,10 +399,19 @@ def analyze_repositories(df: pd.DataFrame) -> Dict[str, Any]:
     if "size" in df.columns:
         result["total_size_kb"] = int(df["size"].sum())
         result["avg_size_kb"] = round(df["size"].mean(), 1)
-        result["largest_repo"] = {
-            "name": df.loc[df["size"].idxmax(), "name"] if len(df) > 0 else None,
-            "size_kb": int(df["size"].max()),
-        }
+        
+        if len(df) > 0 and not df["size"].isna().all():
+            try:
+                max_size_idx = df["size"].idxmax()
+                result["largest_repo"] = {
+                    "name": df.loc[max_size_idx, "name"] if "name" in df.columns else None,
+                    "size_kb": int(df["size"].max()),
+                }
+            except Exception as e:
+                logger.warning(f"Error finding largest repo: {e}")
+                result["largest_repo"] = {"name": None, "size_kb": 0}
+        else:
+            result["largest_repo"] = {"name": None, "size_kb": 0}
 
     logger.info(
         f"Repository analysis complete: {result['total_repos']} repos, "
@@ -1005,7 +1039,3 @@ __all__ = [
     "analyze_commit_messages",
     "generate_developer_profile",
 ]
-
-
-# Import re for regex operations (needed in analyze_commit_messages)
-import re

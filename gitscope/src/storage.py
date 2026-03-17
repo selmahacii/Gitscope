@@ -510,11 +510,14 @@ def save_all_data(data: Dict[str, Any], db_path: str) -> Dict[str, int]:
         if user:
             # Update existing user
             for key, value in profile.items():
-                if key not in ["username", "from_cache"] and hasattr(user, key):
+                if key not in ["username", "from_cache"]:
                     # Map field names
                     db_key = f"github_{key}" if key in ["created_at", "updated_at"] else key
                     if hasattr(user, db_key):
-                        setattr(user, db_key, value)
+                        if key in ["created_at", "updated_at"]:
+                            setattr(user, db_key, _parse_github_datetime(value))
+                        else:
+                            setattr(user, db_key, value)
 
             user.updated_at = datetime.now(timezone.utc)
             logger.debug(f"Updated existing user: {user.username}")

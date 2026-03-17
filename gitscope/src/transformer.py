@@ -263,14 +263,14 @@ def aggregate_by_time(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
     # Identifies preferred coding times and potential overwork
 
     if "hour_of_day" in df.columns and "day_of_week" in df.columns:
-        # Filter out invalid hours
+        # Filter out invalid hours and days
         # WHY: -1 indicates missing data; would create invalid matrix cells
-        valid_hours = df[df["hour_of_day"] >= 0].copy()
+        valid_activity = df[(df["hour_of_day"] >= 0) & (df["day_of_week"] >= 0)].copy()
 
-        if not valid_hours.empty:
+        if not valid_activity.empty:
             # Create pivot table: rows=hour, columns=day_of_week
             # WHY: Pivot table creates the matrix format needed for heatmaps
-            heatmap = valid_hours.pivot_table(
+            heatmap = valid_activity.pivot_table(
                 index="hour_of_day",
                 columns="day_of_week",
                 values="sha",
@@ -281,7 +281,9 @@ def aggregate_by_time(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
             # Rename columns to day names
             # WHY: Human-readable names improve chart readability
             day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-            heatmap.columns = [day_names[int(c)] for c in heatmap.columns if int(c) < 7]
+            # Filter colors to existing index range
+            actual_days = [int(c) for c in heatmap.columns if 0 <= int(c) < 7]
+            heatmap.columns = [day_names[c] for c in actual_days]
 
             # Ensure all 24 hours are present
             # WHY: Missing hours would cause gaps in the visualization
