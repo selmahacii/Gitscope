@@ -6,6 +6,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.storage import get_db_stats, load_repos_df, load_commits_df, load_languages_df
 from src.config import settings
+from src.transformer import clean_commits, aggregate_by_time, compute_advanced_metrics
 
 def main():
     db_path = settings.db_path
@@ -23,16 +24,38 @@ def main():
     print(f"  Commits: {len(commits)}")
     print(f"  Langs: {len(langs)}")
     
-    if not repos.empty:
-        from src.analytics import analyze_repositories
-        print("Testing analyze_repositories...")
-        try:
-            res = analyze_repositories(repos)
-            print("Success!")
-        except Exception as e:
-            print(f"Failed: {e}")
-            import traceback
-            traceback.print_exc()
+    # Run full pipeline
+    from src.analytics import (
+        analyze_languages,
+        analyze_repositories,
+        analyze_commit_messages,
+        generate_developer_profile,
+    )
+    
+    print("Testing pipeline...")
+    try:
+        clean_df = clean_commits(commits)
+        aggregations = aggregate_by_time(clean_df)
+        metrics = compute_advanced_metrics(clean_df)
+        
+        lang_analysis = analyze_languages(langs)
+        repo_analysis = analyze_repositories(repos)
+        commit_analysis = analyze_commit_messages(clean_df)
+        
+        profile = generate_developer_profile(
+            metrics=metrics,
+            languages=lang_analysis,
+            repos=repo_analysis,
+            commits=commit_analysis,
+        )
+        print("Pipeline Success!")
+        print(f"Developer Type: {profile['labels']['developer_type']}")
+        print(f"Overall Score: {profile['scores']['overall']}")
+        
+    except Exception as e:
+        print(f"Pipeline Failed: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()
