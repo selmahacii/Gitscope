@@ -2,27 +2,37 @@
 
 GitScope is a comprehensive tool for analyzing GitHub profiles and repository data. It was built as a data analyst portfolio project to demonstrate end-to-end data pipeline construction, from API collection and storage to advanced metrics and AI-driven insights.
 
-## Project Structure
+## Architecture & Data Flow
 
-This repository is organized into two main parts:
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend as Next.js / Streamlit
+    participant Engine as Python Logic
+    participant Storage as SQLite / Cache
+    participant GitHub as GitHub API
+    participant AI as ZhipuAI LLM
 
-- **Frontend (`/`)**: A Next.js application (using Bun and Prisma) that provides the web interface.
-- **Backend Analytics (`/gitscope`)**: A Python-based engine that handles the heavy lifting—data collection, transformation with pandas, and LLM analysis.
-
-## Core Features
-
-- **Deep Data Collection**: Fetches commits, repository metadata, and language statistics via the GitHub REST API.
-- **Structured Storage**: Uses SQLite with SQLAlchemy for local data persistence and caching.
-- **Metric Computation**: Calculates advanced developer metrics like consistency scores, impact ratings, and "burnout" period detection.
-- **AI Insights**: Integrates with LLMs (like ZhipuAI) to summarize developer profiles and provide qualitative feedback.
-- **Interactive Visualizations**: Terminal output via Rich and a dedicated Streamlit dashboard for visual exploration.
+    User->>Frontend: Enter Username
+    Frontend->>Engine: Trigger Pipeline
+    Engine->>GitHub: Fetch Data (Repos, Commits, Langs)
+    GitHub-->>Engine: Raw JSON Responses
+    Engine->>Storage: Persistent Storage & Caching
+    Storage-->>Engine: Load DataFrames (pandas)
+    Engine->>Engine: Transform & Compute Metrics
+    Engine->>AI: Profile Analysis
+    AI-->>Engine: Qualitative Insights
+    Engine-->>Frontend: Compiled Analytics Result
+    Frontend-->>User: Visual Dashboard / CLI Output
+```
 
 ## Tech Stack
 
-- **Frontend**: Next.js, Bun, Tailwind CSS, Prisma, Radix UI.
-- **Backend**: Python 3.11+, pandas, SQLAlchemy, Loguru.
+- **Frontend**: Next.js (Pages), Bun, Tailwind CSS, Radix UI.
+- **Data Engine**: Python 3.11+, pandas, SQLAlchemy, Pydantic.
 - **Visualization**: Streamlit, Plotly, Rich (CLI).
-- **Proxy/Deployment**: Caddy.
+- **Storage**: SQLite, local caching.
+- **AI**: ZhipuAI (GLM-4).
 
 ## Getting Started
 
