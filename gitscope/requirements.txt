@@ -1,0 +1,141 @@
+# =============================================================================
+# GitHub Profile Analyzer - Production Dependencies
+# =============================================================================
+# This file defines all Python dependencies required for the project.
+# Using pinned versions ensures reproducible builds across environments.
+#
+# Installation: pip install -r requirements.txt
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Core HTTP & Networking
+# -----------------------------------------------------------------------------
+# requests: Synchronous HTTP client for GitHub REST API calls
+# WHY: Simple, battle-tested, excellent timeout/connection pooling support
+requests>=2.31.0
+
+# httpx: Modern async HTTP client for parallel API requests
+# WHY: Better async support than requests, HTTP/2 support, cleaner API
+httpx>=0.25.0
+
+# python-dotenv: Load environment variables from .env files
+# WHY: Keeps sensitive credentials out of version control
+python-dotenv>=1.0.0
+
+# -----------------------------------------------------------------------------
+# Database & ORM
+# -----------------------------------------------------------------------------
+# sqlalchemy: SQL toolkit and Object-Relational Mapping
+# WHY: Production-grade ORM with connection pooling, supports multiple databases
+sqlalchemy>=2.0.0
+
+# aiosqlite: Async SQLite driver for SQLAlchemy
+# WHY: Enables async database operations without blocking the event loop
+aiosqlite>=0.19.0
+
+# -----------------------------------------------------------------------------
+# Data Processing
+# -----------------------------------------------------------------------------
+# pandas: DataFrame library for data manipulation and analysis
+# WHY: Industry standard for tabular data, excellent time series support
+pandas>=2.1.0
+
+# numpy: Numerical computing library
+# WHY: Foundation for pandas, provides vectorized operations and statistical functions
+numpy>=1.26.0
+
+# pyarrow: Apache Arrow integration for pandas
+# WHY: Faster I/O operations, better memory efficiency, parquet support
+pyarrow>=14.0.0
+
+# scipy: Scientific computing library
+# WHY: Statistical functions (linregress, zscore) for trend analysis
+scipy>=1.11.0
+
+# -----------------------------------------------------------------------------
+# Visualization
+# -----------------------------------------------------------------------------
+# plotly: Interactive visualization library
+# WHY: Creates interactive charts that work in both web and export formats
+plotly>=5.18.0
+
+# kaleido: Static image export for plotly
+# WHY: Required for exporting charts as PNG/SVG for reports
+kaleido>=0.2.1
+
+# -----------------------------------------------------------------------------
+# Dashboard
+# -----------------------------------------------------------------------------
+# streamlit: Web app framework for data science
+# WHY: Rapid prototyping, built-in caching, excellent for data dashboards
+streamlit>=1.38.0
+
+# -----------------------------------------------------------------------------
+# Configuration Management
+# -----------------------------------------------------------------------------
+# pydantic: Data validation using Python type annotations
+# WHY: Runtime validation, clear error messages, automatic documentation
+pydantic>=2.5.0
+
+# pydantic-settings: Settings management with environment variable support
+# WHY: Seamless .env integration, type coercion, nested settings
+pydantic-settings>=2.1.0
+
+# -----------------------------------------------------------------------------
+# LLM Integration
+# -----------------------------------------------------------------------------
+# zhipuai: Official SDK for ZhipuAI GLM models
+# WHY: Direct API access to GLM-4 for generating insights from developer data
+zhipuai>=2.0.0
+
+# -----------------------------------------------------------------------------
+# Logging
+# -----------------------------------------------------------------------------
+# loguru: Modern logging library with colors and rotation
+# WHY: Better than stdlib logging: automatic rotation, colors, exception formatting
+loguru>=0.7.0
+
+# -----------------------------------------------------------------------------
+# Utilities
+# -----------------------------------------------------------------------------
+# python-dateutil: Extended datetime parsing
+# WHY: Handles GitHub's various date formats (ISO 8601 variants)
+python-dateutil>=2.8.0
+
+# tqdm: Progress bars for long-running operations
+# WHY: User feedback during data collection (API calls can take minutes)
+tqdm>=4.66.0
+
+# rich: Rich text and beautiful formatting in the terminal
+# WHY: Enhanced CLI output with tables, progress bars, and syntax highlighting
+rich>=13.7.0
+
+# -----------------------------------------------------------------------------
+# Testing
+# -----------------------------------------------------------------------------
+# pytest: Testing framework
+# WHY: Industry standard, fixtures, parametrization, excellent plugin ecosystem
+pytest>=7.4.0
+
+# pytest-asyncio: Async test support
+# WHY: Required for testing async functions in our collector
+pytest-asyncio>=0.21.0
+
+# pytest-cov: Coverage reporting
+# WHY: Measures test coverage, generates reports for CI/CD
+pytest-cov>=4.1.0
+
+# -----------------------------------------------------------------------------
+# Code Quality
+# -----------------------------------------------------------------------------
+# black: Code formatter
+# WHY: Consistent code style across the codebase, no debates about formatting
+black>=23.0.0
+
+# ruff: Fast linter (replaces flake8, isort, and more)
+# WHY: 10-100x faster than alternatives, comprehensive rule set
+ruff>=0.1.0
+
+# mypy: Static type checker
+# WHY: Catches type errors before runtime, improves code documentation
+mypy>=1.7.0
